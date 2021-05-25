@@ -2,10 +2,11 @@ import sys
 from PySide6 import QtWidgets
 from qt_material import apply_stylesheet
 
-#primer archivo
+# primer archivo
 def draw():
     app = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()
+    # tamaño de la ventana
     window.resize(700, 700)
     window.show()
     app.exec_()
@@ -16,5 +17,6 @@ if __name__ == "__main__":
 
 def no():
     print('no')
+
 
 
