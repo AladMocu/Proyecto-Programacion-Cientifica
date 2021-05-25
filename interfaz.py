@@ -6,6 +6,8 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from logica import solve
+import numpy as np
 
 
 # Canvas de graficas
@@ -35,15 +37,32 @@ class MyDynamicMplCanvas(MyMplCanvas):
         MyMplCanvas.__init__(self, *args, **kwargs)
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
+        self.axes.set_xlabel('Days')
+        self.axes.set_ylabel('Population Radio')
+        self.axes.set_title('Method')
 
     def compute_initial_figure(self):
         self.axes.plot([0, 1, 2, 3], [0, 0, 0, 0], 'r')
 
-    def update_figure(self, method, params, variables):
+    def update_figure(self, method, params, variables, max):
         # Build a list of 4 random integers between 0 and 10 (both inclusive)
-        l = [random.randint(0, 10) for i in range(4)]
-        self.axes.cla()
-        self.axes.plot([0, 1, 2, 3], l, 'r')
+        x_range = np.arange(0, max)
+        s,e,i,r,p = solve(method, params, x_range)
+        self.axes.clear()
+        if variables[0]:
+            self.axes.plot(x_range,s,label="s(t)")
+        if variables[1]:
+            self.axes.plot(x_range,e, label="e(t)")
+        if variables[2]:
+            self.axes.plot(x_range,i, label="i(t)")
+        if variables[3]:
+            self.axes.plot(x_range,r, label="r(t)")
+        if variables[4]:
+            self.axes.plot(x_range,p, label="p(t)")
+        self.axes.set_xlabel('Days')
+        self.axes.set_ylabel('Population Radio')
+        self.axes.legend()
+        self.axes.set_title(method)
         self.draw()
 
 
@@ -239,12 +258,15 @@ class MainWindow(object):
         self.horizontalLayout_2.setContentsMargins(100, -1, 100, -1)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.lineEdit = QtWidgets.QLineEdit(self.widget)
+
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.lineEdit.sizePolicy().hasHeightForWidth())
         self.lineEdit.setSizePolicy(sizePolicy)
         self.lineEdit.setObjectName("lineEdit")
+        self.lineEdit.setText("0")
+        self.lineEdit.setReadOnly(True)
         self.horizontalLayout_2.addWidget(self.lineEdit)
         self.label_3 = QtWidgets.QLabel(self.widget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
@@ -270,14 +292,14 @@ class MainWindow(object):
         self.label_4.setSizePolicy(sizePolicy)
         self.label_4.setObjectName("label_4")
         self.horizontalLayout_2.addWidget(self.label_4)
-        self.lineEdit_3 = QtWidgets.QLineEdit(self.widget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lineEdit_3.sizePolicy().hasHeightForWidth())
-        self.lineEdit_3.setSizePolicy(sizePolicy)
-        self.lineEdit_3.setObjectName("lineEdit_3")
-        self.horizontalLayout_2.addWidget(self.lineEdit_3)
+        # self.lineEdit_3 = QtWidgets.QLineEdit(self.widget)
+        # sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        # sizePolicy.setHorizontalStretch(0)
+        # sizePolicy.setVerticalStretch(0)
+        # sizePolicy.setHeightForWidth(self.lineEdit_3.sizePolicy().hasHeightForWidth())
+        # self.lineEdit_3.setSizePolicy(sizePolicy)
+        # self.lineEdit_3.setObjectName("lineEdit_3")
+        # self.horizontalLayout_2.addWidget(self.lineEdit_3)
         self.gridLayout.addLayout(self.horizontalLayout_2, 4, 0, 1, 1)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
@@ -370,6 +392,7 @@ class MainWindow(object):
         self.bLineEdit.setPlaceholderText("0")
         self.pLineEdit.setPlaceholderText("0")
         self.uLineEdit.setPlaceholderText("0")
+        self.lineEdit_2.setPlaceholderText("50")
         self.add_actions()
 
     def add_actions(self):
@@ -414,7 +437,7 @@ class MainWindow(object):
         print("Method: ", self.method)
         print("Parameters: ", t_params)
         print("Variables: ", t_vars)
-        # self.dc.update_figure(self.method, self.parameters,t_vars)
+        self.dc.update_figure(self.method, t_params, t_vars, float(self.lineEdit_2.text() or "50"))
 
     def update_duracion(self):
         self.sim_time.value = 32
