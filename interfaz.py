@@ -2,7 +2,7 @@ import sys
 from PySide6 import QtWidgets
 from qt_material import apply_stylesheet
 
-
+#primer archivo
 def draw():
     app = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()
