@@ -12,12 +12,11 @@ from matplotlib.figure import Figure
 class MyMplCanvas(FigureCanvas):
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = self.fig.add_subplot(111)
         self.compute_initial_figure()
 
-        FigureCanvas.__init__(self, fig)
+        FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
 
         FigureCanvas.setSizePolicy(self,
@@ -36,20 +35,26 @@ class MyDynamicMplCanvas(MyMplCanvas):
         MyMplCanvas.__init__(self, *args, **kwargs)
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
-        timer.start(1000)
 
     def compute_initial_figure(self):
-        self.axes.plot([0, 1, 2, 3], [1, 2, 0, 4], 'r')
+        self.axes.plot([0, 1, 2, 3], [0, 0, 0, 0], 'r')
 
-    def update_figure(self):
+    def update_figure(self, method, params, variables):
         # Build a list of 4 random integers between 0 and 10 (both inclusive)
         l = [random.randint(0, 10) for i in range(4)]
         self.axes.cla()
         self.axes.plot([0, 1, 2, 3], l, 'r')
         self.draw()
 
+
 # Diseño de la interfaz usando qt
+# noinspection PyAttributeOutsideInit
+
 class MainWindow(object):
+    def __init__(self):
+        super(MainWindow, self).__init__()
+        self.method = ""
+
     def setupUi(self, ProyectoFinal):
         ProyectoFinal.setObjectName("ProyectoFinal")
         ProyectoFinal.resize(974, 480)
@@ -225,8 +230,8 @@ class MainWindow(object):
         # definicion
 
         l = QtWidgets.QVBoxLayout(self.frame)
-        dc = MyDynamicMplCanvas(self.frame, width=5, height=4, dpi=100)
-        l.addWidget(dc)
+        self.dc = MyDynamicMplCanvas(self.frame, width=5, height=4, dpi=100)
+        l.addWidget(self.dc)
 
         self.verticalLayout_3.addWidget(self.frame)
         self.gridLayout.addLayout(self.verticalLayout_3, 0, 0, 1, 1)
@@ -357,13 +362,59 @@ class MainWindow(object):
         self.actionImportar.setToolTip(_translate("ProyectoFinal", "Importar"))
         self.actionExportar.setText(_translate("ProyectoFinal", "Exportar"))
         self.actionExportar.setToolTip(_translate("ProyectoFinal", "Exportar"))
+        self.kLineEdit.setPlaceholderText("0")
+        self.kLineEdit.setPlaceholderText("0")
+        self.aiLineEdit.setPlaceholderText("0")
+        self.aeLineEdit.setPlaceholderText("0")
+        self.yLineEdit.setPlaceholderText("0")
+        self.bLineEdit.setPlaceholderText("0")
+        self.pLineEdit.setPlaceholderText("0")
+        self.uLineEdit.setPlaceholderText("0")
+        self.add_actions()
+
+    def add_actions(self):
+        # variables
+        self.param_s.toggled.connect(lambda: self.update_plot())
+        self.param_e.toggled.connect(lambda: self.update_plot())
+        self.param_i.toggled.connect(lambda: self.update_plot())
+        self.param_r.toggled.connect(lambda: self.update_plot())
+        self.param_p.toggled.connect(lambda: self.update_plot())
+        # metodos
+        self.btn_euler_forward.clicked.connect(lambda: self.change_method("Euler Forward"))
+        self.btn_euler_backward.clicked.connect(lambda: self.change_method("Euler Backward"))
+        self.btn_euler_modified.clicked.connect(lambda: self.change_method("Euler Modified"))
+        self.btn_rk_2.clicked.connect(lambda: self.change_method("Runge-Kutta 2"))
+        self.btn_rk_4.clicked.connect(lambda: self.change_method("Runge-Kutta 4"))
+        self.btn_ivp.clicked.connect(lambda: self.change_method("odeint/ivp-solve"))
+        # parametros
+        self.kLineEdit.setValidator(QtGui.QDoubleValidator(-1000.0, 1000.0, 2))
+        self.kLineEdit.setValidator(QtGui.QDoubleValidator(-1000.0, 1000.0, 2))
+        self.aiLineEdit.setValidator(QtGui.QDoubleValidator(-1000.0, 1000.0, 2))
+        self.aeLineEdit.setValidator(QtGui.QDoubleValidator(-1000.0, 1000.0, 2))
+        self.yLineEdit.setValidator(QtGui.QDoubleValidator(-1000.0, 1000.0, 2))
+        self.bLineEdit.setValidator(QtGui.QDoubleValidator(-1000.0, 1000.0, 2))
+        self.pLineEdit.setValidator(QtGui.QDoubleValidator(-1000.0, 1000.0, 2))
+        self.uLineEdit.setValidator(QtGui.QDoubleValidator(-1000.0, 1000.0, 2))
+
+    def change_method(self, newMethod):
+        self.method = newMethod
+        self.update_plot()
 
     def update_plot(self):
-        print("actualizando")
-        self.ydata = self.ydata[1:] + [random.randint(0, 10)]
-        self.canvas.axes.cla()
-        self.canvas.axes.plot(self.xdata, self.ydata, 'r')
-        self.canvas.draw()
+        t_vars = [self.param_s.isChecked(), self.param_e.isChecked(), self.param_i.isChecked(),
+                  self.param_r.isChecked(), self.param_p.isChecked()]
+        t_params = [float(self.kLineEdit.text() or "0"),
+                    float(self.aiLineEdit.text() or "0"),
+                    float(self.aeLineEdit.text() or "0"),
+                    float(self.yLineEdit.text() or "0"),
+                    float(self.bLineEdit.text() or "0"),
+                    float(self.pLineEdit.text() or "0"),
+                    float(self.uLineEdit.text() or "0")]
+
+        print("Method: ", self.method)
+        print("Parameters: ", t_params)
+        print("Variables: ", t_vars)
+        # self.dc.update_figure(self.method, self.parameters,t_vars)
 
     def update_duracion(self):
         self.sim_time.value = 32
