@@ -143,42 +143,42 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton">
+          <widget class="QPushButton" name="btn_euler_forward">
            <property name="text">
             <string>Euler Adelante</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_2">
+          <widget class="QPushButton" name="btn_euler_backward">
            <property name="text">
             <string>Euler Atras</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_3">
+          <widget class="QPushButton" name="btn_euler_modified">
            <property name="text">
             <string>Euler Modificado</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_4">
+          <widget class="QPushButton" name="btn_rk_2">
            <property name="text">
             <string>Runge-Kutta 2</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_5">
+          <widget class="QPushButton" name="btn_rk_4">
            <property name="text">
             <string>Runge-Kutta 4</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_6">
+          <widget class="QPushButton" name="btn_ivp">
            <property name="text">
             <string>odeint/ivp-solve</string>
            </property>
@@ -204,7 +204,7 @@
           <enum>QLayout::SetDefaultConstraint</enum>
          </property>
          <item>
-          <widget class="QRadioButton" name="radioButton_2">
+          <widget class="QRadioButton" name="param_s">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -214,10 +214,13 @@
            <property name="text">
             <string>s(t)</string>
            </property>
+           <property name="autoExclusive">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="radioButton">
+          <widget class="QRadioButton" name="param_e">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -227,10 +230,13 @@
            <property name="text">
             <string>e(t)</string>
            </property>
+           <property name="autoExclusive">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="radioButton_4">
+          <widget class="QRadioButton" name="param_i">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -240,10 +246,13 @@
            <property name="text">
             <string>i(t)</string>
            </property>
+           <property name="autoExclusive">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="radioButton_3">
+          <widget class="QRadioButton" name="param_r">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -253,10 +262,13 @@
            <property name="text">
             <string>r(t)</string>
            </property>
+           <property name="autoExclusive">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="radioButton_5">
+          <widget class="QRadioButton" name="param_p">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -265,6 +277,9 @@
            </property>
            <property name="text">
             <string>p(t)</string>
+           </property>
+           <property name="autoExclusive">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -426,6 +441,22 @@
   <action name="actionSalir">
    <property name="text">
     <string>Salir</string>
+   </property>
+  </action>
+  <action name="actionImportar">
+   <property name="text">
+    <string>Importar</string>
+   </property>
+   <property name="toolTip">
+    <string>Importar</string>
+   </property>
+  </action>
+  <action name="actionExportar">
+   <property name="text">
+    <string>Exportar</string>
+   </property>
+   <property name="toolTip">
+    <string>Exportar</string>
    </property>
   </action>
  </widget>
