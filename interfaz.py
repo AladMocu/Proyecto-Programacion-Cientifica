@@ -13,3 +13,8 @@ def draw():
 
 if __name__ == "__main__":
     print("por favor ejecuta main.py")
+
+def no():
+    print('no')
+
+
