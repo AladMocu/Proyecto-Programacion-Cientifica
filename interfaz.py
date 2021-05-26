@@ -2,12 +2,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from qt_material import apply_stylesheet
 import random
 import matplotlib
-
+import numpy as np
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from logica import solve
-import numpy as np
+
 
 
 # Canvas de graficas
@@ -69,10 +69,11 @@ class MyDynamicMplCanvas(MyMplCanvas):
 # Diseño de la interfaz usando qt
 # noinspection PyAttributeOutsideInit
 
-class MainWindow(object):
+class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.method = ""
+        self.parameteres = [0,0,0,0,0,0,0]
 
     def setupUi(self, ProyectoFinal):
         ProyectoFinal.setObjectName("ProyectoFinal")
@@ -324,16 +325,30 @@ class MainWindow(object):
         self.gridLayout.addLayout(self.horizontalLayout_3, 3, 0, 1, 1)
         self.gridLayout_3.addWidget(self.widget, 0, 0, 1, 1)
         ProyectoFinal.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(ProyectoFinal)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 974, 20))
-        self.menubar.setObjectName("menubar")
-        self.menuStyles = QtWidgets.QMenu(self.menubar)
-        self.menuStyles.setObjectName("menuStyles")
-        self.menuImportar = QtWidgets.QMenu(self.menubar)
-        self.menuImportar.setObjectName("menuImportar")
-        self.menuExportar = QtWidgets.QMenu(self.menubar)
-        self.menuExportar.setObjectName("menuExportar")
-        ProyectoFinal.setMenuBar(self.menubar)
+        # MENU BAR
+        # self.menubar = QtWidgets.QMenuBar(ProyectoFinal)
+        # self.menubar.setGeometry(QtCore.QRect(0, 0, 974, 20))
+        # self.menubar.setObjectName("menubar")
+        # self.menuStyles = QtWidgets.QMenu(self.menubar)
+        # self.menuStyles.setObjectName("menuStyles")
+        # self.menuImportar = QtWidgets.QMenu(self.menubar)
+        # self.menuImportar.setObjectName("menuImportar")
+        # self.menuExportar = QtWidgets.QMenu(self.menubar)
+        # self.menuExportar.setObjectName("menuExportar")
+        # ProyectoFinal.setMenuBar(self.menubar)
+        self.toolbar = ProyectoFinal.addToolBar('Tools')
+        self.exitAction = QtWidgets.QAction(QtGui.QIcon('./assets/exit.png'), 'Exit', self)
+        self.exitAction.triggered.connect(ProyectoFinal.close)
+        self.toolbar.addAction(self.exitAction)
+
+        self.importAction = QtWidgets.QAction(QtGui.QIcon('./assets/import.png'), 'Exit', self)
+        self.importAction.triggered.connect(lambda: self.import_data())
+        self.toolbar.addAction(self.importAction)
+
+        self.exportAction = QtWidgets.QAction(QtGui.QIcon('./assets/export.png'), 'Exit', self)
+        self.exportAction.triggered.connect(lambda: self.export_data())
+        self.toolbar.addAction(self.exportAction)
+
         self.statusbar = QtWidgets.QStatusBar(ProyectoFinal)
         self.statusbar.setObjectName("statusbar")
         ProyectoFinal.setStatusBar(self.statusbar)
@@ -343,9 +358,9 @@ class MainWindow(object):
         self.actionImportar.setObjectName("actionImportar")
         self.actionExportar = QtWidgets.QAction(ProyectoFinal)
         self.actionExportar.setObjectName("actionExportar")
-        self.menubar.addAction(self.menuStyles.menuAction())
-        self.menubar.addAction(self.menuImportar.menuAction())
-        self.menubar.addAction(self.menuExportar.menuAction())
+        # self.menubar.addAction(self.menuStyles.menuAction())
+        # self.menubar.addAction(self.menuImportar.menuAction())
+        # self.menubar.addAction(self.menuExportar.menuAction())
 
         self.retranslateUi(ProyectoFinal)
         QtCore.QMetaObject.connectSlotsByName(ProyectoFinal)
@@ -376,9 +391,9 @@ class MainWindow(object):
         self.label_3.setText(_translate("ProyectoFinal", "-"))
         self.label_4.setText(_translate("ProyectoFinal", "Dias"))
         self.label_5.setText(_translate("ProyectoFinal", "Duracion Simulacion:"))
-        self.menuStyles.setTitle(_translate("ProyectoFinal", "Salir"))
-        self.menuImportar.setTitle(_translate("ProyectoFinal", "Importar"))
-        self.menuExportar.setTitle(_translate("ProyectoFinal", "Exportar"))
+        # self.menuStyles.setTitle(_translate("ProyectoFinal", "Salir"))
+        # self.menuImportar.setTitle(_translate("ProyectoFinal", "Importar"))
+        # self.menuExportar.setTitle(_translate("ProyectoFinal", "Exportar"))
         self.actionSalir.setText(_translate("ProyectoFinal", "Salir"))
         self.actionImportar.setText(_translate("ProyectoFinal", "Importar"))
         self.actionImportar.setToolTip(_translate("ProyectoFinal", "Importar"))
@@ -396,6 +411,10 @@ class MainWindow(object):
         self.add_actions()
 
     def add_actions(self):
+        # acciones
+        # self.menuStyles.clicked.connect(lambda: self.salir())
+        # self.menuExportar.clicked.connect(lambda: self.export_data())
+        # self.menuExportar.clicked.connect(lambda: self.export_data())
         # variables
         self.param_s.toggled.connect(lambda: self.update_plot())
         self.param_e.toggled.connect(lambda: self.update_plot())
@@ -426,7 +445,8 @@ class MainWindow(object):
     def update_plot(self):
         t_vars = [self.param_s.isChecked(), self.param_e.isChecked(), self.param_i.isChecked(),
                   self.param_r.isChecked(), self.param_p.isChecked()]
-        t_params = [float(self.kLineEdit.text() or "0"),
+        self.parameteres = [
+                    float(self.kLineEdit.text() or "0"),
                     float(self.aiLineEdit.text() or "0"),
                     float(self.aeLineEdit.text() or "0"),
                     float(self.yLineEdit.text() or "0"),
@@ -435,9 +455,30 @@ class MainWindow(object):
                     float(self.uLineEdit.text() or "0")]
 
         print("Method: ", self.method)
-        print("Parameters: ", t_params)
+        print("Parameters: ", self.parameteres)
         print("Variables: ", t_vars)
-        self.dc.update_figure(self.method, t_params, t_vars, float(self.lineEdit_2.text() or "50"))
+        self.dc.update_figure(self.method, self.parameteres, t_vars, float(self.lineEdit_2.text() or "50"))
+
+
+    def import_data(self):
+        path = QtWidgets.QFileDialog.getOpenFileName(self, 'Abrir un archivo', '', 'Poputation Simulation files (*.sd)')
+        if path != ('',''):
+            print("File path : "+ path[0])
+            self.parameteres = np.fromfile(path[0], dtype=np.float32)
+            self.kLineEdit.setText(str(self.parameteres[0]))
+            self.aiLineEdit.setText(str(self.parameteres[1]))
+            self.aeLineEdit.setText(str(self.parameteres[2]))
+            self.yLineEdit.setText(str(self.parameteres[3]))
+            self.bLineEdit.setText(str(self.parameteres[4]))
+            self.pLineEdit.setText(str(self.parameteres[5]))
+            self.uLineEdit.setText(str(self.parameteres[6]))
+
+    def export_data(self):
+        name = QtWidgets.QFileDialog.getSaveFileName(self, 'Exportar datos', '', 'Poputation Simulation files (*.sd)')
+        if name != ('',''):
+            print(name[0])
+            data = np.array(self.parameteres, dtype=np.float32)
+            data.tofile(name[0])
 
     def update_duracion(self):
         self.sim_time.value = 32
