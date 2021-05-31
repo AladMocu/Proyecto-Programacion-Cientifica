@@ -50,14 +50,51 @@ def F4(y3, y2, y4, b, p, g):
 def F5(y3, u):
     return u * y3
 
+'''
+===========================================================================
+                        CONDICIONES DEL SISTEMA
+===========================================================================
+'''
+
+
+
+
 
 '''
 ===========================================================================
                  SOLUCIÓN DEL SISTEMA DE ECUACIONES
 ===========================================================================
-
-
 '''
+#Función para encontrar simultáneamente las raíces de las
+#ecuaciones resultantes del método de Euler hacia atrás,
+#para y1, y2, y3, y4, y5.
+#param yt1:
+#param yt2:
+#param yt3:
+#param yt4:
+#param yt5:
+# y_i = y_(i-1) + h * F(y_i)    →   0 = y_(i-1) + h * F(y_i) - y_i
+
+def FEulerBackRoot(yt2, y1t1, y2t1, y3t1, y4t1, y5t1, h, k, a_i, a_e, g, b, p, u):
+    return [y1t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, g) - yt2[0],
+            y2t1 + h * F2(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, p) - yt2[1],
+            y3t1 + h * F3(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], k, b, u) - yt2[2],
+            y4t1 + h * F4(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], b, p, g) - yt2[3],
+            y5t1 + h * F5(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4],  u) - yt2[4]]
+
+#Función para encontrar simultáneamente las raíces de las
+#ecuaciones resultantes del método de Euler modificado,
+#para y1, y2, y3, y4, y5.
+#param yt1:
+#param yt2:
+#param yt3:
+#param yt4:
+#param yt5:
+
+def FEulerModRoot(yt2, y1t1, y2t1, h, k, a_i, a_e, g, b, p, u):
+    retrurn [y1t1 + (h / 2.0) * ()]
+
+
 
 def demo_method(params, range):
     s = []
