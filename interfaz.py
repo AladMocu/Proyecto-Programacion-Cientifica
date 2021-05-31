@@ -3,11 +3,11 @@ from qt_material import apply_stylesheet
 import random
 import matplotlib
 import numpy as np
+
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from logica import solve
-
 
 
 # Canvas de graficas
@@ -40,29 +40,35 @@ class MyDynamicMplCanvas(MyMplCanvas):
         self.axes.set_xlabel('Days')
         self.axes.set_ylabel('Population Radio')
         self.axes.set_title('Method')
+        self.cur_sol = solve("odeint/ivp-solve", [0, 0, 0, 0, 0, 0, 0], np.arange(0,50))
+        self.cur_meth="odeint/ivp-solve"
 
-    def compute_initial_figure(self):
-        self.axes.plot([0, 1, 2, 3], [0, 0, 0, 0], 'r')
+    def solve_model(self, method, params, max):
+        x_range = np.arange(0, max)
+        self.cur_meth = method
+        self.cur_sol = solve(method, params, x_range)
 
-    def update_figure(self, method, params, variables, max):
+    def update_figure(self, variables, max):
         # Build a list of 4 random integers between 0 and 10 (both inclusive)
         x_range = np.arange(0, max)
-        s,e,i,r,p = solve(method, params, x_range)
+
+        s, e, i, r, p = self.cur_sol
+
         self.axes.clear()
         if variables[0]:
-            self.axes.plot(x_range,s,label="s(t)")
+            self.axes.plot(x_range, s, label="s(t)")
         if variables[1]:
-            self.axes.plot(x_range,e, label="e(t)")
+            self.axes.plot(x_range, e, label="e(t)")
         if variables[2]:
-            self.axes.plot(x_range,i, label="i(t)")
+            self.axes.plot(x_range, i, label="i(t)")
         if variables[3]:
-            self.axes.plot(x_range,r, label="r(t)")
+            self.axes.plot(x_range, r, label="r(t)")
         if variables[4]:
-            self.axes.plot(x_range,p, label="p(t)")
+            self.axes.plot(x_range, p, label="p(t)")
         self.axes.set_xlabel('Days')
         self.axes.set_ylabel('Population Radio')
         self.axes.legend()
-        self.axes.set_title(method)
+        self.axes.set_title(self.cur_meth)
         self.draw()
 
 
@@ -73,7 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.method = ""
-        self.parameteres = [0,0,0,0,0,0,0]
+        self.parameteres = [0, 0, 0, 0, 0, 0, 0]
 
     def setupUi(self, ProyectoFinal):
         ProyectoFinal.setObjectName("ProyectoFinal")
@@ -416,11 +422,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.menuExportar.clicked.connect(lambda: self.export_data())
         # self.menuExportar.clicked.connect(lambda: self.export_data())
         # variables
-        self.param_s.toggled.connect(lambda: self.update_plot())
-        self.param_e.toggled.connect(lambda: self.update_plot())
-        self.param_i.toggled.connect(lambda: self.update_plot())
-        self.param_r.toggled.connect(lambda: self.update_plot())
-        self.param_p.toggled.connect(lambda: self.update_plot())
+        self.param_s.toggled.connect(lambda: self.update_plot(False))
+        self.param_e.toggled.connect(lambda: self.update_plot(False))
+        self.param_i.toggled.connect(lambda: self.update_plot(False))
+        self.param_r.toggled.connect(lambda: self.update_plot(False))
+        self.param_p.toggled.connect(lambda: self.update_plot(False))
         # metodos
         self.btn_euler_forward.clicked.connect(lambda: self.change_method("Euler Forward"))
         self.btn_euler_backward.clicked.connect(lambda: self.change_method("Euler Backward"))
@@ -440,30 +446,31 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def change_method(self, newMethod):
         self.method = newMethod
-        self.update_plot()
+        self.update_plot(True)
 
-    def update_plot(self):
+    def update_plot(self, recalculate):
         t_vars = [self.param_s.isChecked(), self.param_e.isChecked(), self.param_i.isChecked(),
                   self.param_r.isChecked(), self.param_p.isChecked()]
         self.parameteres = [
-                    float(self.kLineEdit.text() or "0"),
-                    float(self.aiLineEdit.text() or "0"),
-                    float(self.aeLineEdit.text() or "0"),
-                    float(self.yLineEdit.text() or "0"),
-                    float(self.bLineEdit.text() or "0"),
-                    float(self.pLineEdit.text() or "0"),
-                    float(self.uLineEdit.text() or "0")]
+            float(self.kLineEdit.text() or "0"),
+            float(self.aiLineEdit.text() or "0"),
+            float(self.aeLineEdit.text() or "0"),
+            float(self.yLineEdit.text() or "0"),
+            float(self.bLineEdit.text() or "0"),
+            float(self.pLineEdit.text() or "0"),
+            float(self.uLineEdit.text() or "0")]
 
         print("Method: ", self.method)
         print("Parameters: ", self.parameteres)
         print("Variables: ", t_vars)
-        self.dc.update_figure(self.method, self.parameteres, t_vars, float(self.lineEdit_2.text() or "50"))
-
+        if recalculate:
+            self.dc.solve_model(self.method,self.parameteres,float(self.lineEdit_2.text() or "50"))
+        self.dc.update_figure(t_vars, float(self.lineEdit_2.text() or "50"))
 
     def import_data(self):
         path = QtWidgets.QFileDialog.getOpenFileName(self, 'Abrir un archivo', '', 'Poputation Simulation files (*.sd)')
-        if path != ('',''):
-            print("File path : "+ path[0])
+        if path != ('', ''):
+            print("File path : " + path[0])
             self.parameteres = np.fromfile(path[0], dtype=np.float32)
             self.kLineEdit.setText(str(self.parameteres[0]))
             self.aiLineEdit.setText(str(self.parameteres[1]))
@@ -475,7 +482,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def export_data(self):
         name = QtWidgets.QFileDialog.getSaveFileName(self, 'Exportar datos', '', 'Poputation Simulation files (*.sd)')
-        if name != ('',''):
+        if name != ('', ''):
             print(name[0])
             data = np.array(self.parameteres, dtype=np.float32)
             data.tofile(name[0])
