@@ -31,10 +31,13 @@ y5: p(t): El número de individuos que muere debido a la enfermedad.
 import numpy as np
 from scipy.integrate import odeint
 
+iniciales = [0.8, 0.03, 0.03, 0.04, 0.1]
+h = 0.1
 
-# Definimos la función F1:
-def F1(y1, y2, y3, y4, a_e, a_i, g):
-    return -a_e * y1 * y2 - a_i * y1 * y3 + g * y4
+
+# Definimos la función F1 ds(t)/dt:
+def F1(s, e, i, r, a_e, a_i, y):
+    return -a_e * s * e - a_i * s * i + y * r
 
 
 # Definimos la función F2:
@@ -65,21 +68,64 @@ def F5(y3, u):
 '''
 
 
-def demo_method(params, range):
-    k, ai, ae, y, b, p, u = params
-    s = []
-    e = []
-    i = []
-    r = []
-    p = []
+# -----------------------FUNCIONES AUXILIARES-----------------------------
 
-    s = 30 / (params[0] + np.exp(-0.5 * range))
-    e = 20 / (params[1] + np.exp(-0.5 * range))
-    i = 10 / (params[2] + np.exp(-0.5 * range))
-    r = 90 / (params[3] + np.exp(-0.5 * range))
-    p = 80 / (params[4] + np.exp(-0.5 * range))
+# EULER BACKWARD:
+def FEulerBackRoot(params, time):
+    a_e, a_i, k, g, b, p, u = params
+    yt2, y1t1, y2t1, y3t1, y4t1, y5t1 = init_arr(time)
+    h = abs(time[1] - time[0])
+    return [y1t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, g) - yt2[0],
+            y2t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, p) - yt2[1],
+            y3t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], k, b, u) - yt2[2],
+            y4t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], b, p, g) - yt2[3],
+            y5t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], u) - yt2[4]]
+
+# EULER MODIFICADO:
+def FEulerModRoot(params, time):
+    a_e, a_i, k, g, b, p, u = params
+    yt2, y1t1, y2t1, y3t1, y4t1, y5t1 = init_arr(time)
+    h = abs(time[1] - time[0])
+
+    return [y1t1 + (h / 2.0) *
+            (F1(y1t1, y2t1, y3t1, y4t1, y5t1, a_e, a_i, k, g, b, p, u) +
+             F1(yt2[0],yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, g, b, p, u)) - yt2[0],
+            y2t1 + (h / 2.0) *
+            (F2(y1t1, y2t1, y3t1, y4t1, y5t1, a_e, a_i, k, g, b, p, u) +
+             F2(yt2[0],yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, g, b, p, u)) - yt2[1],
+            y3t1 + (h / 2.0) *
+            (F3(y1t1, y2t1, y3t1, y4t1, y5t1, a_e, a_i, k, g, b, p, u) +
+             F3(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, g, b, p, u)) - yt2[2],
+            y4t1 + (h / 2.0) *
+            (F4(y1t1, y2t1, y3t1, y4t1, y5t1, a_e, a_i, k, g, b, p, u) +
+             F4(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, g, b, p, u)) - yt2[3],
+            y5t1 + (h / 2.0) *
+            (F5(y1t1, y2t1, y3t1, y4t1, y5t1, a_e, a_i, k, g, b, p, u) +
+             F5(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, g, b, p, u)) - yt2[4],
+            ]
+
+#------------------------------Métodos numéricos-------------------------------
+#Método de condiciones iniciales:
+def init_arr(time):
+    s = np.zeros(len(time))
+    e = np.zeros(len(time))
+    i = np.zeros(len(time))
+    r = np.zeros(len(time))
+    p = np.zeros(len(time))
+    # Falta definir los valores iniciales
+    s[0] = iniciales[0]
+    e[0] = iniciales[1]
+    i[0] = iniciales[2]
+    r[0] = iniciales[3]
+    p[0] = iniciales[4]
+
     return s, e, i, r, p
 
+#EULER FORWARD:
+
+#EULER BACKWARDS:
+
+#EULER MODIFICADO:
 
 def euler_forward(params, range):
     k, ai, ae, y, b, p, u = params
@@ -129,13 +175,31 @@ def euler_modified(params, range):
     return s, e, i, r, p
 
 
-def runge_2(params, range):
-    k, ai, ae, y, b, p, u = params
-    s = []
-    e = []
-    i = []
-    r = []
-    p = []
+# RK2
+def runge_2(params, time):
+    k, ai, ae, g, b, rho, u = params
+    s, e, i, r, p = init_arr(time)
+
+    h = abs(time[1] - time[0])
+    for it in range(1, len(time)):
+        ks1 = F1(s[it - 1], e[it - 1], i[it - 1], r[it - 1], ae, ai, g)
+        ks2 = F1(s[it - 1] + ks1 * h, e[it - 1] + ks1 * h, i[it - 1] + ks1 * h, r[it - 1] + ks1 * h, ae, ai, g)
+        s[it] = s[it - 1] + (h / 2) * (ks1 + ks2)
+
+        ke1 = F2(s[it - 1], e[it - 1], i[it - 1], ae, ai, k, rho)
+        ke2 = F2(s[it - 1] + ke1 * h, e[it - 1] + ke1 * h, i[it - 1] + ke1 * h, ae, ai, k, rho)
+        e[it] = e[it - 1] + (h / 2) * (ke1 + ke2)
+
+        ki1 = F3(e[it - 1], i[it - 1], k, b, u)
+        ki2 = F3(e[it - 1] + ki1 * h, i[it - 1] + ki1 * h, k, b, u)
+        i[it] = i[it - 1] + (h / 2) * (ki1 + ki2)
+
+        kr1 = F4(e[it - 1], i[it - 1], r[it - 1], b, rho, g)
+        kr2 = F4(e[it - 1] + kr1 * h, i[it - 1] + kr1 * h, r[it - 1] + kr1 * h, b, rho, g)
+        r[it] = r[it - 1] + (h / 2) * (kr1 + kr2)
+
+        kp1 = F5(i[it - 1], u)
+        kp2 = F5(i[it - 1] + kp1 * h,u)
 
     s = 30 / (params[0] + np.exp(-0.5 * range))
     e = 20 / (params[1] + np.exp(-0.5 * range))
@@ -163,19 +227,17 @@ def runge_4(params, range):
 
 def aux_odeint(z, t, k, ai, ae, y, b, pp, u):
     s, e, i, r, p = z
-    dsdt = -ae*s*e-ai*s*i+y*r
-    dedt = ae*s*e+ai*s*i-k*e-pp*e
-    didt = k*e-b*i-u*i
-    drdt = b*i+p*e-y*r
-    dpdt = u*i
+    dsdt = -ae * s * e - ai * s * i + y * r
+    dedt = ae * s * e + ai * s * i - k * e - pp * e
+    didt = k * e - b * i - u * i
+    drdt = b * i + p * e - y * r
+    dpdt = u * i
     return [dsdt, dedt, didt, drdt, dpdt]
 
 
 def odeint_s(params, range):
-    z0 = [0.1, 0.02, 0.01, 0.2, 0.01]
 
-    z = odeint(aux_odeint, z0, range, args=tuple(params))
-
+    z = odeint(aux_odeint, iniciales, range, args=tuple(params))
     return z[:, 0], z[:, 1], z[:, 2], z[:, 3], z[:, 4]
 
 

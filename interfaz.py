@@ -14,17 +14,20 @@ from logica import solve
 class MyMplCanvas(FigureCanvas):
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
+
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111)
         self.compute_initial_figure()
 
         FigureCanvas.__init__(self, self.fig)
+
         self.setParent(parent)
 
         FigureCanvas.setSizePolicy(self,
                                    QtWidgets.QSizePolicy.Expanding,
                                    QtWidgets.QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
+
 
     def compute_initial_figure(self):
         pass
@@ -40,7 +43,7 @@ class MyDynamicMplCanvas(MyMplCanvas):
         self.axes.set_xlabel('Days')
         self.axes.set_ylabel('Population Radio')
         self.axes.set_title('Method')
-        self.cur_sol = solve("odeint/ivp-solve", [0, 0, 0, 0, 0, 0, 0], np.arange(0,50))
+        self.cur_sol = solve("odeint/ivp-solve", [0, 0, 0, 0, 0, 0, 0], np.arange(0,150))
         self.cur_meth="odeint/ivp-solve"
 
     def solve_model(self, method, params, max):
@@ -347,11 +350,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exitAction.triggered.connect(ProyectoFinal.close)
         self.toolbar.addAction(self.exitAction)
 
-        self.importAction = QtWidgets.QAction(QtGui.QIcon('./assets/import.png'), 'Exit', self)
+        self.importAction = QtWidgets.QAction(QtGui.QIcon('./assets/import.png'), 'Import', self)
         self.importAction.triggered.connect(lambda: self.import_data())
         self.toolbar.addAction(self.importAction)
 
-        self.exportAction = QtWidgets.QAction(QtGui.QIcon('./assets/export.png'), 'Exit', self)
+        self.exportAction = QtWidgets.QAction(QtGui.QIcon('./assets/export.png'), 'Export', self)
         self.exportAction.triggered.connect(lambda: self.export_data())
         self.toolbar.addAction(self.exportAction)
 
@@ -405,15 +408,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionImportar.setToolTip(_translate("ProyectoFinal", "Importar"))
         self.actionExportar.setText(_translate("ProyectoFinal", "Exportar"))
         self.actionExportar.setToolTip(_translate("ProyectoFinal", "Exportar"))
-        self.kLineEdit.setPlaceholderText("0")
-        self.kLineEdit.setPlaceholderText("0")
-        self.aiLineEdit.setPlaceholderText("0")
-        self.aeLineEdit.setPlaceholderText("0")
-        self.yLineEdit.setPlaceholderText("0")
-        self.bLineEdit.setPlaceholderText("0")
-        self.pLineEdit.setPlaceholderText("0")
-        self.uLineEdit.setPlaceholderText("0")
-        self.lineEdit_2.setPlaceholderText("50")
+        self.kLineEdit.setPlaceholderText("0.050")
+        self.aiLineEdit.setPlaceholderText("0.005")
+        self.aeLineEdit.setPlaceholderText("0.650")
+        self.yLineEdit.setPlaceholderText("0.000")
+        self.bLineEdit.setPlaceholderText("0.100")
+        self.pLineEdit.setPlaceholderText("0.080")
+        self.uLineEdit.setPlaceholderText("0.020")
+        self.lineEdit_2.setPlaceholderText("150")
         self.add_actions()
 
     def add_actions(self):
@@ -444,6 +446,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pLineEdit.setValidator(QtGui.QDoubleValidator(-1000.0, 1000.0, 2))
         self.uLineEdit.setValidator(QtGui.QDoubleValidator(-1000.0, 1000.0, 2))
 
+
     def change_method(self, newMethod):
         self.method = newMethod
         self.update_plot(True)
@@ -452,20 +455,20 @@ class MainWindow(QtWidgets.QMainWindow):
         t_vars = [self.param_s.isChecked(), self.param_e.isChecked(), self.param_i.isChecked(),
                   self.param_r.isChecked(), self.param_p.isChecked()]
         self.parameteres = [
-            float(self.kLineEdit.text() or "0"),
-            float(self.aiLineEdit.text() or "0"),
-            float(self.aeLineEdit.text() or "0"),
-            float(self.yLineEdit.text() or "0"),
-            float(self.bLineEdit.text() or "0"),
-            float(self.pLineEdit.text() or "0"),
-            float(self.uLineEdit.text() or "0")]
+            float(self.kLineEdit.text() or "0.050"),
+            float(self.aiLineEdit.text() or "0.005"),
+            float(self.aeLineEdit.text() or "0.650"),
+            float(self.yLineEdit.text() or "0.000"),
+            float(self.bLineEdit.text() or "0.100"),
+            float(self.pLineEdit.text() or "0.080"),
+            float(self.uLineEdit.text() or "0.020")]
 
         print("Method: ", self.method)
         print("Parameters: ", self.parameteres)
         print("Variables: ", t_vars)
         if recalculate:
-            self.dc.solve_model(self.method,self.parameteres,float(self.lineEdit_2.text() or "50"))
-        self.dc.update_figure(t_vars, float(self.lineEdit_2.text() or "50"))
+            self.dc.solve_model(self.method,self.parameteres,float(self.lineEdit_2.text() or "150"))
+        self.dc.update_figure(t_vars, float(self.lineEdit_2.text() or "150"))
 
     def import_data(self):
         path = QtWidgets.QFileDialog.getOpenFileName(self, 'Abrir un archivo', '', 'Poputation Simulation files (*.sd)')
@@ -481,6 +484,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.uLineEdit.setText(str(self.parameteres[6]))
 
     def export_data(self):
+        self.parameteres = [
+            float(self.kLineEdit.text() or "0"),
+            float(self.aiLineEdit.text() or "0"),
+            float(self.aeLineEdit.text() or "0"),
+            float(self.yLineEdit.text() or "0"),
+            float(self.bLineEdit.text() or "0"),
+            float(self.pLineEdit.text() or "0"),
+            float(self.uLineEdit.text() or "0")]
+
         name = QtWidgets.QFileDialog.getSaveFileName(self, 'Exportar datos', '', 'Poputation Simulation files (*.sd)')
         if name != ('', ''):
             print(name[0])
