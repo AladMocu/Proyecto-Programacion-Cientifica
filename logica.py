@@ -40,24 +40,24 @@ def F1(s, e, i, r, a_e, a_i, y):
     return -a_e * s * e - a_i * s * i + y * r
 
 
-# Definimos la función F2:
-def F2(y1, y2, y3, a_e, a_i, k, p):
-    return a_e * y1 * y2 + a_i * y1 * y3 - k * y2 - p * y2
+# Definimos la función F2 de(t)/dt:
+def F2(s, e, i, a_e, a_i, k, rho):
+    return a_e * s * e + a_i * s * i - k * e - rho * e
 
 
-# Definimos la función F3:
-def F3(y2, y3, k, b, u):
-    return k * y2 - b * y3 - u * y3
+# Definimos la función F3 di(t)/dt:
+def F3(e, i, k, b, u):
+    return k * e - b * i - u * i
 
 
-# Definimos la función F4:
-def F4(y3, y2, y4, b, p, g):
-    return b * y3 + p * y2 + g * y4
+# Definimos la función F4 dr(t)/dt:
+def F4(i, e, r, b, rho, y):
+    return b * i + rho * e + y * r
 
 
-# Definimos la función F5:
-def F5(y3, u):
-    return u * y3
+# Definimos la función F5 dp(t)/dt:
+def F5(mu, u):
+    return u * mu
 
 
 '''
@@ -201,27 +201,50 @@ def runge_2(params, time):
         kp1 = F5(i[it - 1], u)
         kp2 = F5(i[it - 1] + kp1 * h,u)
 
-    s = 30 / (params[0] + np.exp(-0.5 * range))
-    e = 20 / (params[1] + np.exp(-0.5 * range))
-    i = 10 / (params[2] + np.exp(-0.5 * range))
-    r = 90 / (params[3] + np.exp(-0.5 * range))
-    p = 80 / (params[4] + np.exp(-0.5 * range))
+        p[it] = p[it - 1] + (h / 2) * (kp1 + kp2)
+
     return s, e, i, r, p
 
 
-def runge_4(params, range):
-    k, ai, ae, y, b, p, u = params
-    s = []
-    e = []
-    i = []
-    r = []
-    p = []
+# RK4
+def runge_4(params, time):
+    k, ai, ae, g, b, rho, u = params
+    s, e, i, r, p = init_arr(time)
 
-    s = 30 / (params[0] + np.exp(-0.5 * range))
-    e = 20 / (params[1] + np.exp(-0.5 * range))
-    i = 10 / (params[2] + np.exp(-0.5 * range))
-    r = 90 / (params[3] + np.exp(-0.5 * range))
-    p = 80 / (params[4] + np.exp(-0.5 * range))
+    h = abs(time[1] - time[0])
+    for it in range(1, len(time)):
+        ks1 = F1(s[it - 1], e[it - 1], i[it - 1], r[it - 1], ae, ai, g)
+        ks2 = F1(s[it - 1] + 0.5 * h * ks1, e[it - 1] + 0.5 * h * ks1, i[it - 1] + 0.5 * h * ks1,
+                 r[it - 1] + 0.5 * h * ks1, ae, ai, g)
+        ks3 = F1(s[it - 1] + 0.5 * h * ks2, e[it - 1] + 0.5 * h * ks2, i[it - 1] + 0.5 * h * ks2,
+                 r[it - 1] + 0.5 * h * ks2, ae, ai, g)
+        ks4 = F1(s[it - 1] + h * ks3, e[it - 1] + h * ks3, i[it - 1] + h * ks3, r[it - 1] + h * ks3, ae, ai, g)
+        s[it] = s[it - 1] + (h / 6.0) * (ks1 + 2.0 * ks2 + 2.0 * ks3 + ks4)
+
+        ke1 = F2(s[it - 1], e[it - 1], i[it - 1], ae, ai, k, rho)
+        ke2 = F2(s[it - 1] + 0.5 * h * ke1, e[it - 1] + 0.5 * h * ke1, i[it - 1] + 0.5 * h * ke1, ae, ai, k, rho)
+        ke3 = F2(s[it - 1] + 0.5 * h * ke2, e[it - 1] + 0.5 * h * ke2, i[it - 1] + 0.5 * h * ke2, ae, ai, k, rho)
+        ke4 = F2(s[it - 1] + h * ke3, e[it - 1] + h * ke3, i[it - 1] + h * ke3, ae, ai, k, rho)
+        e[it] = e[it - 1] + (h / 6.0) * (ke1 + 2.0 * ke2 + 2.0 * ke3 + ke4)
+
+        ki1 = F3(e[it - 1], i[it - 1], k, b, u)
+        ki2 = F3(e[it - 1] + 0.5 * h * ki1, i[it - 1] + 0.5 * h * ki1, k, b, u)
+        ki3 = F3(e[it - 1] + 0.5 * h * ki2, i[it - 1] + 0.5 * h * ki2, k, b, u)
+        ki4 = F3(e[it - 1] + h * ki3, i[it - 1] + h * ki3, k, b, u)
+        i[it] = i[it - 1] + (h / 6.0) * (ki1 + 2.0 * ki2 + 2.0 * ki3 + ki4)
+
+        kr1 = F4(e[it - 1], i[it - 1], r[it - 1], b, rho, g)
+        kr2 = F4(e[it - 1] + 0.5 * h * kr1, i[it - 1] + 0.5 * h * kr1, r[it - 1] + 0.5 * h * kr1, b, rho, g)
+        kr3 = F4(e[it - 1] + 0.5 * h * kr2, i[it - 1] + 0.5 * h * kr2, r[it - 1] + 0.5 * h * kr2, b, rho, g)
+        kr4 = F4(e[it - 1] + h * kr3, i[it - 1] + h * kr3, r[it - 1] + h * kr3, b, rho, g)
+        r[it] = r[it - 1] + (h / 6.0) * (kr1 + 2.0 * kr2 + 2.0 * kr3 + kr4)
+
+        kp1 = F5(i[it - 1], u)
+        kp2 = F5(i[it - 1] + 0.5 * h * kp1, u)
+        kp3 = F5(i[it - 1] + 0.5 * h * kp2, u)
+        kp4 = F5(i[it - 1] + h * kp3, u)
+        p[it] = p[it - 1] + (h / 6.0) * (kp1 + 2.0 * kp2 + 2.0 * kp3 + kp4)
+
     return s, e, i, r, p
 
 
