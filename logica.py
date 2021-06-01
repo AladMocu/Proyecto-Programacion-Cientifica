@@ -174,7 +174,6 @@ def euler_modified(params, range):
     p = 80 / (params[4] + np.exp(-0.5 * range))
     return s, e, i, r, p
 
-
 # RK2
 def runge_2(params, time):
     k, ai, ae, g, b, rho, u = params
