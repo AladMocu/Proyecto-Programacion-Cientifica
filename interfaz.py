@@ -12,30 +12,22 @@ from logica import solve
 
 # Canvas de graficas
 class MyMplCanvas(FigureCanvas):
-
     def __init__(self, parent=None, width=5, height=4, dpi=100):
-
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111)
         self.compute_initial_figure()
-
         FigureCanvas.__init__(self, self.fig)
-
         self.setParent(parent)
-
         FigureCanvas.setSizePolicy(self,
                                    QtWidgets.QSizePolicy.Expanding,
                                    QtWidgets.QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
-
-
     def compute_initial_figure(self):
         pass
 
 
 class MyDynamicMplCanvas(MyMplCanvas):
     """A canvas that updates itself every second with a new plot."""
-
     def __init__(self, *args, **kwargs):
         MyMplCanvas.__init__(self, *args, **kwargs)
         timer = QtCore.QTimer(self)
@@ -77,7 +69,6 @@ class MyDynamicMplCanvas(MyMplCanvas):
 
 # Diseño de la interfaz usando qt
 # noinspection PyAttributeOutsideInit
-
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -256,12 +247,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
-        # definicion
-
         l = QtWidgets.QVBoxLayout(self.frame)
         self.dc = MyDynamicMplCanvas(self.frame, width=5, height=4, dpi=100)
         l.addWidget(self.dc)
-
         self.verticalLayout_3.addWidget(self.frame)
         self.gridLayout.addLayout(self.verticalLayout_3, 0, 0, 1, 1)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
@@ -302,14 +290,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label_4.setSizePolicy(sizePolicy)
         self.label_4.setObjectName("label_4")
         self.horizontalLayout_2.addWidget(self.label_4)
-        # self.lineEdit_3 = QtWidgets.QLineEdit(self.widget)
-        # sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        # sizePolicy.setHorizontalStretch(0)
-        # sizePolicy.setVerticalStretch(0)
-        # sizePolicy.setHeightForWidth(self.lineEdit_3.sizePolicy().hasHeightForWidth())
-        # self.lineEdit_3.setSizePolicy(sizePolicy)
-        # self.lineEdit_3.setObjectName("lineEdit_3")
-        # self.horizontalLayout_2.addWidget(self.lineEdit_3)
         self.gridLayout.addLayout(self.horizontalLayout_2, 4, 0, 1, 1)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
@@ -334,17 +314,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gridLayout.addLayout(self.horizontalLayout_3, 3, 0, 1, 1)
         self.gridLayout_3.addWidget(self.widget, 0, 0, 1, 1)
         ProyectoFinal.setCentralWidget(self.centralwidget)
-        # MENU BAR
-        # self.menubar = QtWidgets.QMenuBar(ProyectoFinal)
-        # self.menubar.setGeometry(QtCore.QRect(0, 0, 974, 20))
-        # self.menubar.setObjectName("menubar")
-        # self.menuStyles = QtWidgets.QMenu(self.menubar)
-        # self.menuStyles.setObjectName("menuStyles")
-        # self.menuImportar = QtWidgets.QMenu(self.menubar)
-        # self.menuImportar.setObjectName("menuImportar")
-        # self.menuExportar = QtWidgets.QMenu(self.menubar)
-        # self.menuExportar.setObjectName("menuExportar")
-        # ProyectoFinal.setMenuBar(self.menubar)
         self.toolbar = ProyectoFinal.addToolBar('Tools')
         self.exitAction = QtWidgets.QAction(QtGui.QIcon('./assets/exit.png'), 'Exit', self)
         self.exitAction.triggered.connect(ProyectoFinal.close)

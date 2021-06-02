@@ -81,6 +81,7 @@ def FEulerBackRoot(params, time):
             y4t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], b, p, g) - yt2[3],
             y5t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], u) - yt2[4]]
 
+
 # EULER MODIFICADO:
 def FEulerModRoot(params, time):
     a_e, a_i, k, g, b, p, u = params
@@ -174,6 +175,7 @@ def euler_modified(params, range):
     p = 80 / (params[4] + np.exp(-0.5 * range))
     return s, e, i, r, p
 
+
 # RK2
 def runge_2(params, time):
     k, ai, ae, g, b, rho, u = params
@@ -198,7 +200,7 @@ def runge_2(params, time):
         r[it] = r[it - 1] + (h / 2) * (kr1 + kr2)
 
         kp1 = F5(i[it - 1], u)
-        kp2 = F5(i[it - 1] + kp1 * h,u)
+        kp2 = F5(i[it - 1] + kp1 * h, u)
 
         p[it] = p[it - 1] + (h / 2) * (kp1 + kp2)
 
@@ -258,7 +260,6 @@ def aux_odeint(z, t, k, ai, ae, y, b, pp, u):
 
 
 def odeint_s(params, range):
-
     z = odeint(aux_odeint, iniciales, range, args=tuple(params))
     return z[:, 0], z[:, 1], z[:, 2], z[:, 3], z[:, 4]
 
