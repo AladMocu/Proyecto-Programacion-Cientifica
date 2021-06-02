@@ -14,22 +14,23 @@ Con los siguientes parámetros:
 param1: k: Tasa en la que aparecen los síntomas en los casos expuestos. 
 param2: a_i: Factor de contagio entre las poblaciones infectadas y susceptibles.
 param3: a_e: El factor de contagio entre las poblaciones susceptibles y las expuestas.
-param4: g: Tasa de reinfección.
+param4: y: Tasa de reinfección.
 param5: b: La tasa de recuperación de los casos infectados.
-param6: p: La tasa de recuperación de los casos expuestos.
-param7: u: Tasa de mortalidad de los casos infectados.
+param6: rho: La tasa de recuperación de los casos expuestos.
+param7: mu: Tasa de mortalidad de los casos infectados.
 
 Además, definimos s(t), e(t), i(t), r(t), p(t) de la siguiente manera:
 
-y1: s(t): Fracción de la población que es susceptible.
-y2: e(t): Fracción de la población que es expuesta.
-y3: i(t): Fracción de la población infectada.
-y4: r(t): Fracción de la población recuperada.
-y5: p(t): El número de individuos que muere debido a la enfermedad.
+s: s(t): Fracción de la población que es susceptible.
+e: e(t): Fracción de la población que es expuesta.
+i: i(t): Fracción de la población infectada.
+r: r(t): Fracción de la población recuperada.
+p: p(t): El número de individuos que muere debido a la enfermedad.
 '''
 
 import numpy as np
 from scipy.integrate import odeint
+import scipy.optimize as opt
 
 iniciales = [0.8, 0.03, 0.03, 0.04, 0.1]
 h = 0.1
@@ -46,8 +47,8 @@ def F2(s, e, i, a_e, a_i, k, rho):
 
 
 # Definimos la función F3 di(t)/dt:
-def F3(e, i, k, b, u):
-    return k * e - b * i - u * i
+def F3(e, i, k, b, mu):
+    return k * e - b * i - mu * i
 
 
 # Definimos la función F4 dr(t)/dt:
@@ -56,8 +57,8 @@ def F4(i, e, r, b, rho, y):
 
 
 # Definimos la función F5 dp(t)/dt:
-def F5(mu, u):
-    return u * mu
+def F5(mu, i):
+    return mu * i
 
 
 '''
@@ -68,52 +69,73 @@ def F5(mu, u):
 '''
 
 
-# -----------------------FUNCIONES AUXILIARES-----------------------------
+# --------------------   FUNCIONES AUXILIARES    --------------------------
 
 # EULER BACKWARD:
-def FEulerBackRoot(params, time):
-    a_e, a_i, k, g, b, p, u = params
-    yt2, y1t1, y2t1, y3t1, y4t1, y5t1 = init_arr(time)
-    h = abs(time[1] - time[0])
-    return [y1t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, g) - yt2[0],
-            y2t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, p) - yt2[1],
-            y3t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], k, b, u) - yt2[2],
-            y4t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], b, p, g) - yt2[3],
-            y5t1 + h * F1(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], u) - yt2[4]]
+# Función cun sistemas de EDOs, que se usará posteriormente
+# para resolver el sistema con fsolve.
+# param1: aux: Matriz que almacena los vectores de solución de la iteración actual y[i] para
+# s, e, i, r, p.
+# param1: st1: Arreglo de soluciones de la fracción de la población susceptible, en la iteración anterior.
+# param2: et1: Arreglo de soluciones de la fracción de la población expuesta, en la iteración anterior.
+# param3: it1: Arreglo de soluciones de la fracción de la población infectada, en la iteración anterior.
+# param4: rt1: Arreglo de soluciones de la fracción de la población recuperada, en la iteración anterior.
+# param5: pt1: Arreglo de soluciones del número de individuos que muere debido a la enfermedad, en la iteración anterior.
+# params: a_e, a_i, k, y, b, rho, mu.
+# param6: h:
+def FEulerBackRoot(aux, st1, et1, it1, rt1, pt1, a_e, a_i, k, y, b, rho, mu):
+    h = 1
+    return [st1 + h * F1(aux[0], aux[1], aux[2], aux[3], a_e, a_i, y) - aux[0],
+            et1 + h * F2(aux[0], aux[1], aux[2], a_e, a_i, k, rho) - aux[1],
+            it1 + h * F3(aux[1], aux[2], k, b, mu) - aux[2],
+            rt1 + h * F4(aux[2], aux[1], aux[3], b, rho, y) - aux[3],
+            pt1 + h * F5(aux[2], mu) - aux[4]]
 
 
 # EULER MODIFICADO:
-def FEulerModRoot(params, time):
-    a_e, a_i, k, g, b, p, u = params
-    yt2, y1t1, y2t1, y3t1, y4t1, y5t1 = init_arr(time)
-    h = abs(time[1] - time[0])
+# Función cun sistemas de EDOs, que se usará posteriormente
+# para resolver el sistema con fsolve.
+# param1: aux: Matriz que almacena los vectores de solución de la iteración actual y[i] para
+# s, e, i, r, p.
+# param1: st1: Arreglo de soluciones de la fracción de la población susceptible, en la iteración anterior.
+# param2: et1: Arreglo de soluciones de la fracción de la población expuesta, en la iteración anterior.
+# param3: it1: Arreglo de soluciones de la fracción de la población infectada, en la iteración anterior.
+# param4: rt1: Arreglo de soluciones de la fracción de la población recuperada, en la iteración anterior.
+# param5: pt1: Arreglo de soluciones del número de individuos que muere debido a la enfermedad, en la iteración anterior.
+# params: a_e, a_i, k, y, b, rho, mu.
+# param6: h:
 
-    return [y1t1 + (h / 2.0) *
-            (F1(y1t1, y2t1, y3t1, y4t1, y5t1, a_e, a_i, k, g, b, p, u) +
-             F1(yt2[0],yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, g, b, p, u)) - yt2[0],
-            y2t1 + (h / 2.0) *
-            (F2(y1t1, y2t1, y3t1, y4t1, y5t1, a_e, a_i, k, g, b, p, u) +
-             F2(yt2[0],yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, g, b, p, u)) - yt2[1],
-            y3t1 + (h / 2.0) *
-            (F3(y1t1, y2t1, y3t1, y4t1, y5t1, a_e, a_i, k, g, b, p, u) +
-             F3(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, g, b, p, u)) - yt2[2],
-            y4t1 + (h / 2.0) *
-            (F4(y1t1, y2t1, y3t1, y4t1, y5t1, a_e, a_i, k, g, b, p, u) +
-             F4(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, g, b, p, u)) - yt2[3],
-            y5t1 + (h / 2.0) *
-            (F5(y1t1, y2t1, y3t1, y4t1, y5t1, a_e, a_i, k, g, b, p, u) +
-             F5(yt2[0], yt2[1], yt2[2], yt2[3], yt2[4], a_e, a_i, k, g, b, p, u)) - yt2[4],
+def FEulerModRoot(aux, st1, et1, it1, rt1, pt1, a_e, a_i, k, y, b, rho, mu):
+    h=1
+    return [st1 + (h / 2.0) *
+            (F1(st1, et1, it1, rt1, a_e, a_i, y) +
+             F1(aux[0], aux[1], aux[2], aux[3], a_e, a_i, y)) - aux[0],
+            et1 + (h / 2.0) *
+            (F2(st1, et1, it1, a_e, a_i, k, rho) +
+             F2(aux[0], aux[1], aux[2], a_e, a_i, k, rho)) - aux[1],
+            it1 + (h / 2.0) *
+            (F3(et1, it1, k, b, mu) +
+             F3(aux[1], aux[2], k, b, mu)) - aux[2],
+            rt1 + (h / 2.0) *
+            (F4(et1, it1, rt1, b, rho, y) +
+             F4(aux[1], aux[2], aux[3], b, rho, y)) - aux[3],
+            pt1 + (h / 2.0) *
+            (F5(it1, mu) +
+             F5(aux[2], mu)) - aux[4],
             ]
 
-#------------------------------Métodos numéricos-------------------------------
-#Método de condiciones iniciales:
+
+# -------------------------    MÉTODOS NUMÉRICOS   ---------------------------
+
+# Método de condiciones iniciales:
 def init_arr(time):
     s = np.zeros(len(time))
     e = np.zeros(len(time))
     i = np.zeros(len(time))
     r = np.zeros(len(time))
     p = np.zeros(len(time))
-    # Falta definir los valores iniciales
+    # Valores iniciales teniendo en cuenta que se debe cumplir:
+    #      s(t) + e(t) + i(t) + r(t) + p(t) = 1
     s[0] = iniciales[0]
     e[0] = iniciales[1]
     i[0] = iniciales[2]
@@ -122,58 +144,63 @@ def init_arr(time):
 
     return s, e, i, r, p
 
-#EULER FORWARD:
 
-#EULER BACKWARDS:
+# EULER FORWARD:
+def euler_forward(params, time):
 
-#EULER MODIFICADO:
+    k, a_i, a_e,y, b, rho, mu = params
+    S_EulerFor, E_EulerFor, I_EulerFor, R_EulerFor, P_EulerFor = init_arr(time)
+    h = abs(time[1] - time[0])
 
-def euler_forward(params, range):
-    k, ai, ae, y, b, p, u = params
-    s = []
-    e = []
-    i = []
-    r = []
-    p = []
+    for i in range(1, len(time)):
+        S_EulerFor[i] = S_EulerFor[i - 1] + h * F1(S_EulerFor[i - 1], E_EulerFor[i - 1], I_EulerFor[i - 1],
+                                                   R_EulerFor[i - 1], a_e, a_i, y)
+        E_EulerFor[i] = E_EulerFor[i - 1] + h * F2(S_EulerFor[i - 1], E_EulerFor[i - 1], I_EulerFor[i - 1],
+                                                   a_e, a_i, k, rho)
+        I_EulerFor[i] = I_EulerFor[i - 1] + h * F3(E_EulerFor[i - 1], I_EulerFor[i - 1], k, b, mu)
+        R_EulerFor[i] = R_EulerFor[i - 1] + h * F4(I_EulerFor[i - 1], E_EulerFor[i - 1], R_EulerFor[i - 1],
+                                                   b, rho, y)
+        P_EulerFor[i] = P_EulerFor[i - 1] + h * F5(I_EulerFor[i - 1], mu)
 
-    s = 30 / (params[0] + np.exp(-0.5 * range))
-    e = 20 / (params[1] + np.exp(-0.5 * range))
-    i = 10 / (params[2] + np.exp(-0.5 * range))
-    r = 90 / (params[3] + np.exp(-0.5 * range))
-    p = 80 / (params[4] + np.exp(-0.5 * range))
-    return s, e, i, r, p
-
-
-def euler_backward(params, range):
-    k, ai, ae, y, b, p, u = params
-    s = []
-    e = []
-    i = []
-    r = []
-    p = []
-
-    s = 30 / (params[0] + np.exp(-0.5 * range))
-    e = 20 / (params[1] + np.exp(-0.5 * range))
-    i = 10 / (params[2] + np.exp(-0.5 * range))
-    r = 90 / (params[3] + np.exp(-0.5 * range))
-    p = 80 / (params[4] + np.exp(-0.5 * range))
-    return s, e, i, r, p
+    return S_EulerFor, E_EulerFor, I_EulerFor, R_EulerFor, P_EulerFor
 
 
-def euler_modified(params, range):
-    k, ai, ae, y, b, p, u = params
-    s = []
-    e = []
-    i = []
-    r = []
-    p = []
+# EULER BACKWARD
+def euler_backward(params, time):
 
-    s = 30 / (params[0] + np.exp(-0.5 * range))
-    e = 20 / (params[1] + np.exp(-0.5 * range))
-    i = 10 / (params[2] + np.exp(-0.5 * range))
-    r = 90 / (params[3] + np.exp(-0.5 * range))
-    p = 80 / (params[4] + np.exp(-0.5 * range))
-    return s, e, i, r, p
+    k, a_i, a_e,y, b, rho, mu = params
+
+    S_EulerBack, E_EulerBack, I_EulerBack, R_EulerBack, P_EulerBack = init_arr(time)
+
+    for i in range(1, len(time)):
+        SolBack = opt.fsolve(FEulerBackRoot, np.array([S_EulerBack[i - 1], E_EulerBack[i - 1], I_EulerBack[i - 1],
+                                                       R_EulerBack[i - 1], P_EulerBack[i - 1]]),
+                             (S_EulerBack[i - 1], E_EulerBack[i - 1], I_EulerBack[i - 1], R_EulerBack[i - 1],
+                              P_EulerBack[i - 1], a_e, a_i, k, y, b, rho, mu))
+        S_EulerBack[i] = SolBack[0]
+        E_EulerBack[i] = SolBack[1]
+        I_EulerBack[i] = SolBack[2]
+        R_EulerBack[i] = SolBack[3]
+        P_EulerBack[i] = SolBack[4]
+    return S_EulerBack, E_EulerBack, I_EulerBack, R_EulerBack, P_EulerBack
+
+
+# EULER MODIFICADO
+def euler_modified(params, time):
+    k, a_i, a_e,y, b, rho, mu = params
+    S_EulerMod, E_EulerMod, I_EulerMod, R_EulerMod, P_EulerMod = init_arr(time)
+
+    for i in range(1, len(time)):
+        SolMod = opt.fsolve(FEulerModRoot, np.array([S_EulerMod[i - 1], E_EulerMod[i - 1], I_EulerMod[i - 1],
+                                                     R_EulerMod[i - 1], P_EulerMod[i - 1]]),
+                            (S_EulerMod[i - 1], E_EulerMod[i - 1], I_EulerMod[i - 1], R_EulerMod[i - 1],
+                             P_EulerMod[i - 1], a_e, a_i, k, y, b, rho, mu))
+        S_EulerMod[i] = SolMod[0]
+        E_EulerMod[i] = SolMod[1]
+        I_EulerMod[i] = SolMod[2]
+        R_EulerMod[i] = SolMod[3]
+        P_EulerMod[i] = SolMod[4]
+    return S_EulerMod, E_EulerMod, I_EulerMod, R_EulerMod, P_EulerMod
 
 
 # RK2
