@@ -44,11 +44,8 @@ class MyDynamicMplCanvas(MyMplCanvas):
         self.cur_sol = solve(method, params, x_range)
 
     def update_figure(self, variables, max):
-        # Build a list of 4 random integers between 0 and 10 (both inclusive)
         x_range = np.arange(0, max)
-
         s, e, i, r, p = self.cur_sol
-
         self.axes.clear()
         if variables[0]:
             self.axes.plot(x_range, s, label="s(t)")
@@ -345,7 +342,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def retranslateUi(self, ProyectoFinal):
         _translate = QtCore.QCoreApplication.translate
-        ProyectoFinal.setWindowTitle(_translate("ProyectoFinal", "MainWindow"))
+        ProyectoFinal.setWindowTitle(_translate("ProyectoFinal", "ProyectoFinal"))
         self.label_2.setText(_translate("ProyectoFinal", "Parametros"))
         self.kLabel.setText(_translate("ProyectoFinal", "κ"))
         self.aiLabel.setText(_translate("ProyectoFinal", "𝛼ι"))
@@ -476,13 +473,11 @@ def draw():
     import sys
     app = QtWidgets.QApplication(sys.argv)
     ProyectoFinal = QtWidgets.QMainWindow()
-    apply_stylesheet(app, theme='dark_teal.xml')
+    apply_stylesheet(app, theme='dark_red.xml')
     ui = MainWindow()
     ui.setupUi(ProyectoFinal)
     ProyectoFinal.show()
     sys.exit(app.exec_())
 
-
 if __name__ == "__main__":
-    print("por favor ejecuta main.py")
     draw()
