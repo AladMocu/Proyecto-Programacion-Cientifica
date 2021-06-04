@@ -108,7 +108,7 @@ def FEulerBackRoot(aux, st1, et1, it1, rt1, pt1, a_e, a_i, k, y, b, rho, mu):
 
 
 def FEulerModRoot(aux, st1, et1, it1, rt1, pt1, a_e, a_i, k, y, b, rho, mu):
-    h=1
+    h = 1
     return [st1 + (h / 2.0) *
             (F1(st1, et1, it1, rt1, a_e, a_i, y) +
              F1(aux[0], aux[1], aux[2], aux[3], a_e, a_i, y)) - aux[0],
@@ -131,9 +131,9 @@ def FEulerModRoot(aux, st1, et1, it1, rt1, pt1, a_e, a_i, k, y, b, rho, mu):
 
 # Método de condiciones iniciales:
 
-#-------------------------    MÉTODOS NUMÉRICOS   ---------------------------
+# -------------------------    MÉTODOS NUMÉRICOS   ---------------------------
 
-#Método de condiciones iniciales:
+# Método de condiciones iniciales:
 
 def init_arr(time):
     s = np.zeros(len(time))
@@ -150,10 +150,10 @@ def init_arr(time):
 
     return s, e, i, r, p
 
+
 # EULER FORWARD:
 def euler_forward(params, time):
-
-    k, a_i, a_e,y, b, rho, mu = params
+    k, a_i, a_e, y, b, rho, mu = params
     S_EulerFor, E_EulerFor, I_EulerFor, R_EulerFor, P_EulerFor = init_arr(time)
     h = abs(time[1] - time[0])
 
@@ -172,8 +172,7 @@ def euler_forward(params, time):
 
 # EULER BACKWARD
 def euler_backward(params, time):
-
-    k, a_i, a_e,y, b, rho, mu = params
+    k, a_i, a_e, y, b, rho, mu = params
 
     S_EulerBack, E_EulerBack, I_EulerBack, R_EulerBack, P_EulerBack = init_arr(time)
 
@@ -192,7 +191,7 @@ def euler_backward(params, time):
 
 # EULER MODIFICADO
 def euler_modified(params, time):
-    k, a_i, a_e,y, b, rho, mu = params
+    k, a_i, a_e, y, b, rho, mu = params
     S_EulerMod, E_EulerMod, I_EulerMod, R_EulerMod, P_EulerMod = init_arr(time)
 
     for i in range(1, len(time)):
@@ -208,58 +207,10 @@ def euler_modified(params, time):
     return S_EulerMod, E_EulerMod, I_EulerMod, R_EulerMod, P_EulerMod
 
 
-#EULER FORWARD:
+# EULER FORWARD:
 
-def euler_forward(params, time):
-    k, a_i, a_e, y, b, rho, mu = params
-    S_EulerFor, E_EulerFor, I_EulerFor, R_EulerFor, P_EulerFor = init_arr(time)
-    h = abs(time[1] - time[0])
 
-    for i in range(1, len(time)):
-        S_EulerFor[i] = S_EulerFor[i-1] + h * F1(S_EulerFor[i-1], E_EulerFor[i-1], I_EulerFor[i-1],
-                                                R_EulerFor[i-1], a_e, a_i, y)
-        E_EulerFor[i] = E_EulerFor[i-1] + h * F2(S_EulerFor[i-1], E_EulerFor[i-1], I_EulerFor[i-1],
-                                               a_e, a_i, k, rho)
-        I_EulerFor[i] = I_EulerFor[i-1] + h * F3(E_EulerFor[i-1], I_EulerFor[i-1], k, b, mu)
-        R_EulerFor[i] = R_EulerFor[i-1] + h * F4(I_EulerFor[i-1], E_EulerFor[i-1], R_EulerFor[i-1],
-                                                 b, rho, y)
-        P_EulerFor[i] = P_EulerFor[i-1] + h * F5(I_EulerFor[i-1], mu)
 
-    return S_EulerFor, E_EulerFor, I_EulerFor, R_EulerFor, P_EulerFor
-
-#EULER BACKWARD
-def euler_backward(params, time):
-    k, a_i, a_e, y, b, rho, mu = params
-    S_EulerBack, E_EulerBack, I_EulerBack, R_EulerBack, P_EulerBack = init_arr(time)
-
-    for i in range(1, len(time)):
-        SolBack = opt.fsolve(FEulerBackRoot, np.array([S_EulerBack[i-1], E_EulerBack[i-1], I_EulerBack[i-1],
-                                                       R_EulerBack[i-1], P_EulerBack[i-1]]),
-                             (S_EulerBack[i-1], E_EulerBack[i-1], I_EulerBack[i-1], R_EulerBack[i-1],
-                             P_EulerBack[i-1], a_e, a_i, k, y, b, rho, mu))
-        S_EulerBack[i] = SolBack[0]
-        E_EulerBack[i] = SolBack[1]
-        I_EulerBack[i] = SolBack[2]
-        R_EulerBack[i] = SolBack[3]
-        P_EulerBack[i] = SolBack[4]
-    return S_EulerBack, E_EulerBack, I_EulerBack, R_EulerBack, P_EulerBack
-
-#EULER MODIFICADO
-def euler_modified(params, time):
-    k, a_i, a_e, y, b, rho, mu = params
-    S_EulerMod, E_EulerMod, I_EulerMod, R_EulerMod, P_EulerMod = init_arr(time)
-
-    for i in range(1, len(time)):
-        SolMod = opt.fsolve(FEulerModRoot, np.array([S_EulerMod[i - 1], E_EulerMod[i - 1], I_EulerMod[i - 1],
-                                                       R_EulerMod[i - 1], P_EulerMod[i - 1]]),
-                             (S_EulerMod[i - 1], E_EulerMod[i - 1], I_EulerMod[i - 1], R_EulerMod[i - 1],
-                              P_EulerMod[i - 1], a_e, a_i, k, y, b, rho, mu))
-        S_EulerMod[i] = SolMod[0]
-        E_EulerMod[i] = SolMod[1]
-        I_EulerMod[i] = SolMod[2]
-        R_EulerMod[i] = SolMod[3]
-        P_EulerMod[i] = SolMod[4]
-    return S_EulerMod, E_EulerMod, I_EulerMod, R_EulerMod, P_EulerMod
 
 # RK2
 def runge_2(params, time):
